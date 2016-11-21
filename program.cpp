@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see
- * <http://www.gnu.org/licenses/>. 
+ * <http://www.gnu.org/licenses/>.
  */
 
 #include <limits.h>
@@ -76,8 +76,9 @@ void ProgramData::dequeue(byte qid) {
       station_qid[queue[qid].sid] = qid;
   }
   nqueue--;
+#ifdef SERIAL_DEBUG
+    RuntimeQueueStruct *q = queue;
 
-  RuntimeQueueStruct *q = queue;
   DEBUG_PRINT("de:");
   for(;q<queue+nqueue;q++) {
     DEBUG_PRINT("[");
@@ -89,6 +90,7 @@ void ProgramData::dequeue(byte qid) {
     DEBUG_PRINT("]");
   }
   DEBUG_PRINTLN("");
+#endif
 }
 
 /** Load program count from NVM */
@@ -114,7 +116,7 @@ void ProgramData::read(byte pid, ProgramStruct *buf) {
     // todo: handle SD card
   } else {
     unsigned int addr = ADDR_PROGRAMDATA + (unsigned int)pid * PROGRAMSTRUCT_SIZE;
-    nvm_read_block((void*)buf, (const void *)addr, PROGRAMSTRUCT_SIZE);  
+    nvm_read_block((void*)buf, (const void *)addr, PROGRAMSTRUCT_SIZE);
   }
 }
 
@@ -142,20 +144,14 @@ void ProgramData::moveup(byte pid) {
     // swap program pid-1 and pid
     unsigned int src = ADDR_PROGRAMDATA + (unsigned int)(pid-1) * PROGRAMSTRUCT_SIZE;
     unsigned int dst = src + PROGRAMSTRUCT_SIZE;
-#if defined(ARDUINO) // NVM write for Arduino
+
     byte tmp;
-    for(int i=0;i<PROGRAMSTRUCT_SIZE;i++,src++,dst++) {
+	for (unsigned int i = 0; i < PROGRAMSTRUCT_SIZE; i++, src++, dst++)
+	    {
       tmp = nvm_read_byte((byte *)src);
       nvm_write_byte((byte *)src, nvm_read_byte((byte *)dst));
       nvm_write_byte((byte *)dst, tmp);
     }
-#else // NVM write for RPI/BBB
-    ProgramStruct tmp1, tmp2;
-    nvm_read_block(&tmp1, (void *)src, PROGRAMSTRUCT_SIZE);
-    nvm_read_block(&tmp2, (void *)dst, PROGRAMSTRUCT_SIZE);
-    nvm_write_block(&tmp1, (void *)dst, PROGRAMSTRUCT_SIZE);
-    nvm_write_block(&tmp2, (void *)src, PROGRAMSTRUCT_SIZE);
-#endif // NVM write
   }
 }
 
@@ -182,7 +178,7 @@ byte ProgramData::del(byte pid) {
     unsigned int addr = ADDR_PROGRAMDATA + (unsigned int)(pid+1) * PROGRAMSTRUCT_SIZE;
     // erase by copying backward
     for (; addr < ADDR_PROGRAMDATA + nprograms * PROGRAMSTRUCT_SIZE; addr += PROGRAMSTRUCT_SIZE) {
-      nvm_read_block((void*)&copy, (const void *)addr, PROGRAMSTRUCT_SIZE);  
+      nvm_read_block((void*)&copy, (const void *)addr, PROGRAMSTRUCT_SIZE);
       nvm_write_block((const void*)&copy, (void *)(addr-PROGRAMSTRUCT_SIZE), PROGRAMSTRUCT_SIZE);
     }
     nprograms --;
@@ -209,17 +205,11 @@ int16_t ProgramStruct::starttime_decode(int16_t t) {
 /** Check if a given time matches the program's start day */
 byte ProgramStruct::check_day_match(time_t t) {
 
-#if defined(ARDUINO) // get current time from Arduino
+
   byte weekday_t = weekday(t);        // weekday ranges from [0,6] within Sunday being 1
   byte day_t = day(t);
   byte month_t = month(t);
-#else // get current time from RPI/BBB
-  time_t ct = t;
-  struct tm *ti = gmtime(&ct);
-  byte weekday_t = (ti->tm_wday+1)%7;  // tm_wday ranges from [0,6] with Sunday being 0
-  byte day_t = ti->tm_mday;
-  byte month_t = ti->tm_mon+1;   // tm_mon ranges from [0,11]
-#endif // get current time
+
 
   byte wd = (weekday_t+5)%7;
   byte dt = day_t;
@@ -270,9 +260,9 @@ byte ProgramStruct::check_match(time_t t) {
   // check program enable status
   if (!enabled) return 0;
 
-  int16_t start = starttime_decode(starttimes[0]);
-  int16_t repeat = starttimes[1];
-  int16_t interval = starttimes[2];
+    unsigned int start = starttime_decode(starttimes[0]);
+    unsigned int repeat = starttimes[1];
+    unsigned int interval = starttimes[2];
   unsigned int current_minute = (t%86400L)/60;
 
   // first assume program starts today

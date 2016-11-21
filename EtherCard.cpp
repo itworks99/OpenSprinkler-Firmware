@@ -9,7 +9,7 @@
 //
 // 2010-05-19 <jc@wippler.nl>
 
-#include <EtherCard.h>
+#include "EtherCard.h"
 #include <stdarg.h>
 #include <avr/eeprom.h>
 
@@ -168,7 +168,7 @@ void Stash::prepare (PGM_P fmt, ...) {
                 ultoa(argval, buf, 10);
                 arglen = strlen(buf);
                 break;
-            }          
+            }
             case 'S':
                 arglen = strlen((const char*) argval);
                 break;

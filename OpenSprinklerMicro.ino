@@ -1,10 +1,10 @@
 /* OpenSprinkler Unified (AVR/RPI/BBB/LINUX) Firmware
  * Copyright (C) 2015 by Ray Wang (ray@opensprinkler.com)
  *
- * Server functions
+ * Main loop wrapper for Arduino
  * Feb 2015 @ OpenSprinkler.com
  *
- * This file is part of the OpenSprinkler library
+ * This file is part of the OpenSprinkler Firmware
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,19 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _SERVER_H
-#define _SERVER_H
+#include "OpenSprinkler.h"
 
-#endif // _SERVER_H
+extern OpenSprinkler os;
+
+void do_setup();
+void do_loop();
+
+void setup()
+    {
+    do_setup();
+}
+
+void loop()
+    {
+    do_loop();
+}

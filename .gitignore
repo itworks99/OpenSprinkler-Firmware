@@ -3,3 +3,6 @@ nvm.dat
 OpenSprinkler
 wtopts.txt
 stns.dat
+/core/
+/Release/
+/.ino.cpp

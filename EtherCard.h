@@ -16,7 +16,7 @@
 //   SCK - Pin 13
 //   SO  - Pin 12
 //   SI  - Pin 11
-//   CS  - Pin  8
+//   CS  - Pin  10 KV: Changed from default 8
 //
 #ifndef __PROG_TYPES_COMPAT__
 #define __PROG_TYPES_COMPAT__
@@ -211,7 +211,7 @@ public:
     *     @return <i>uint8_t</i> Firmware version or zero on failure.
     */
     static uint8_t begin (const uint16_t size, const uint8_t* macaddr,
-                          uint8_t csPin =8);
+			 uint8_t csPin = 10);
 
     /**   @brief  Configure network interface with static IP
     *     @param  my_ip IP address (4 bytes). 0 for no change.

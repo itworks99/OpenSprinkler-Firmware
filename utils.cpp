@@ -25,12 +25,15 @@
 #include "OpenSprinkler.h"
 extern OpenSprinkler os;
 
-#if defined(ARDUINO)  // AVR
 #include <avr/eeprom.h>
+
+#ifndef NOSD
 #include "SdFat.h"
 extern SdFat sd;
+#endif
 
 void write_to_file(const char *name, const char *data, int size, int pos, bool trunc) {
+#ifndef NOSD
   if (!os.status.has_sd)  return;
 
   char fn[12];
@@ -46,9 +49,13 @@ void write_to_file(const char *name, const char *data, int size, int pos, bool t
   file.seekSet(pos);
   file.write(data, size);
   file.close();
+#else
+    return;
+#endif
 }
 
 bool read_from_file(const char *name, char *data, int maxsize, int pos) {
+#ifndef NOSD
   if (!os.status.has_sd)  { data[0]=0; return false; }
 
   char fn[12];
@@ -65,9 +72,13 @@ bool read_from_file(const char *name, char *data, int maxsize, int pos) {
   data[maxsize-1]=0;
   file.close();
   return true;
+#else
+    return false;
+#endif
 }
 
 void remove_file(const char *name) {
+#ifndef NOSD
   if (!os.status.has_sd)  return;
 
   char fn[12];
@@ -75,238 +86,10 @@ void remove_file(const char *name) {
   sd.chdir("/");
   if (!sd.exists(fn))  return;
   sd.remove(fn);
-}
-
-#else // RPI/BBB/LINUX
-void nvm_read_block(void *dst, const void *src, int len) {
-  FILE *fp = fopen(get_filename_fullpath(NVM_FILENAME), "rb");
-  if(fp) {
-    fseek(fp, (unsigned int)src, SEEK_SET);
-    fread(dst, 1, len, fp);
-    fclose(fp);
-  }
-}
-
-void nvm_write_block(const void *src, void *dst, int len) {
-  FILE *fp = fopen(get_filename_fullpath(NVM_FILENAME), "rb+");
-  if(!fp) {
-    fp = fopen(get_filename_fullpath(NVM_FILENAME), "wb");
-  }
-  if(fp) {
-    fseek(fp, (unsigned int)dst, SEEK_SET);
-    fwrite(src, 1, len, fp);
-    fclose(fp);
-  } else {
-    // file does not exist
-  }
-}
-
-byte nvm_read_byte(const byte *p) {
-  FILE *fp = fopen(get_filename_fullpath(NVM_FILENAME), "rb");
-  byte v = 0;
-  if(fp) {
-    fseek(fp, (unsigned int)p, SEEK_SET);
-    fread(&v, 1, 1, fp);
-    fclose(fp);
-  } else {
-   // file does not exist
-  }
-  return v;
-}
-
-void nvm_write_byte(const byte *p, byte v) {
-  FILE *fp = fopen(get_filename_fullpath(NVM_FILENAME), "rb+");
-  if(!fp) {
-    fp = fopen(get_filename_fullpath(NVM_FILENAME), "wb");
-  }
-  if(fp) {
-    fseek(fp, (unsigned int)p, SEEK_SET);
-    fwrite(&v, 1, 1, fp);
-    fclose(fp);
-  } else {
-    // file does not exist
-  }
-}
-
-void write_to_file(const char *name, const char *data, int size, int pos, bool trunc) {
-  FILE *file;
-  if(trunc) {
-    file = fopen(get_filename_fullpath(name), "wb");
-  } else {
-    file = fopen(get_filename_fullpath(name), "r+b");
-    if(!file) {
-        file = fopen(get_filename_fullpath(name), "wb");
-    }
-  }
-
-  if (!file) { return; }
-
-  fseek(file, pos, SEEK_SET);
-  fwrite(data, 1, size, file);
-  fclose(file);
-}
-
-bool read_from_file(const char *name, char *data, int maxsize, int pos) {
-
-  FILE *file;
-  file = fopen(get_filename_fullpath(name), "rb");
-  if(!file) {
-    data[0] = 0;
-    return true;
-  }
-
-  int res;
-  fseek(file, pos, SEEK_SET);
-  if(fgets(data, maxsize, file)) {
-    res = strlen(data);
-  } else {
-    res = 0;
-  }
-  if (res <= 0) {
-    data[0] = 0;
-  }
-
-  data[maxsize-1]=0;
-  fclose(file);
-  return true;
-}
-
-void remove_file(const char *name) {
-  remove(get_filename_fullpath(name));
-}
-
-char* get_runtime_path() {
-  static char path[PATH_MAX];
-  static byte query = 1;
-
-  #ifdef __APPLE__
-    strcpy(path, "./");
-    return path;
-  #endif
-
-  if(query) {
-    if(readlink("/proc/self/exe", path, PATH_MAX ) <= 0) {
-      return NULL;
-    }
-    char* path_end = strrchr(path, '/');
-    if(path_end == NULL) {
-      return NULL;
-    }
-    path_end++;
-    *path_end=0;
-    query = 0;
-  }
-  return path;
-}
-
-char* get_filename_fullpath(const char *filename) {
-  static char fullpath[PATH_MAX];
-  strcpy(fullpath, get_runtime_path());
-  strcat(fullpath, filename);
-  return fullpath;
-}
-
-#if defined(OSPI)
-unsigned int detect_rpi_rev() {
-  FILE * filp;
-  unsigned int rev;
-  char buf[512];
-  char term;
-
-  rev = 0;
-  filp = fopen ("/proc/cpuinfo", "r");
-
-  if (filp != NULL) {
-    while (fgets(buf, sizeof(buf), filp) != NULL) {
-      if (!strncasecmp("revision\t", buf, 9)) {
-        if (sscanf(buf+strlen(buf)-5, "%x%c", &rev, &term) == 2) {
-          if (term == '\n') break;
-          rev = 0;
-        }
-      }
-    }
-    fclose(filp);
-  }
-  return rev;
-}
+#else
+    return;
 #endif
-
-void delay(ulong howLong)
-{
-  struct timespec sleeper, dummy ;
-
-  sleeper.tv_sec  = (time_t)(howLong / 1000) ;
-  sleeper.tv_nsec = (long)(howLong % 1000) * 1000000 ;
-
-  nanosleep (&sleeper, &dummy) ;
 }
-
-void delayMicrosecondsHard (ulong howLong)
-{
-  struct timeval tNow, tLong, tEnd ;
-
-  gettimeofday (&tNow, NULL) ;
-  tLong.tv_sec  = howLong / 1000000 ;
-  tLong.tv_usec = howLong % 1000000 ;
-  timeradd (&tNow, &tLong, &tEnd) ;
-
-  while (timercmp (&tNow, &tEnd, <))
-    gettimeofday (&tNow, NULL) ;
-}
-
-void delayMicroseconds (ulong howLong)
-{
-  struct timespec sleeper ;
-  unsigned int uSecs = howLong % 1000000 ;
-  unsigned int wSecs = howLong / 1000000 ;
-
-  /**/ if (howLong ==   0)
-    return ;
-  else if (howLong  < 100)
-    delayMicrosecondsHard (howLong) ;
-  else
-  {
-    sleeper.tv_sec  = wSecs ;
-    sleeper.tv_nsec = (long)(uSecs * 1000L) ;
-    nanosleep (&sleeper, NULL) ;
-  }
-}
-
-static uint64_t epochMilli, epochMicro ;
-
-void initialiseEpoch()
-{
-  struct timeval tv ;
-
-  gettimeofday (&tv, NULL) ;
-  epochMilli = (uint64_t)tv.tv_sec * (uint64_t)1000    + (uint64_t)(tv.tv_usec / 1000) ;
-  epochMicro = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)(tv.tv_usec) ;
-}
-
-ulong millis (void)
-{
-  struct timeval tv ;
-  uint64_t now ;
-
-  gettimeofday (&tv, NULL) ;
-  now  = (uint64_t)tv.tv_sec * (uint64_t)1000 + (uint64_t)(tv.tv_usec / 1000) ;
-
-  return (uint32_t)(now - epochMilli) ;
-}
-
-ulong micros (void)
-{
-  struct timeval tv ;
-  uint64_t now ;
-
-  gettimeofday (&tv, NULL) ;
-  now  = (uint64_t)tv.tv_sec * (uint64_t)1000000 + (uint64_t)tv.tv_usec ;
-
-  return (uint32_t)(now - epochMicro) ;
-}
-
-
-#endif
 
 // copy n-character string from program memory with ending 0
 void strncpy_P0(char* dest, const char* src, int n) {
@@ -360,8 +143,4 @@ byte water_time_encode_signed(int16_t i) {
 int16_t water_time_decode_signed(byte i) {
   i=(i>240)?240:i;
   return ((int16_t)i-120)*5;
-}
-
-
-
-
+    }

@@ -25,23 +25,16 @@
 #include "program.h"
 
 // External variables defined in main ion file
-#if defined(ARDUINO)
 
+#ifndef NOSD
 #include "SdFat.h"
 extern SdFat sd;
+#endif
+
 static uint8_t ntpclientportL = 123; // Default NTP client port
+
+#ifndef NOFLOWSENSOR
 extern ulong flow_count;
-
-#else
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include "etherport.h"
-#include "server.h"
-
-extern char ether_buffer[];
-extern EthernetClient *m_client;
-
 #endif
 
 extern BufferFiller bfill;
@@ -55,11 +48,15 @@ void process_dynamic_events(ulong curr_time);
 void check_network(time_t curr_time);
 void check_weather(time_t curr_time);
 void perform_ntp_sync(time_t curr_time);
+#ifndef OSMICRO
 void log_statistics(time_t curr_time);
+#endif
 void delete_log(char *name);
 void reset_all_stations_immediate();
 void reset_all_stations();
+#ifndef NOSD
 void make_logfile_name(char *name);
+#endif
 int available_ether_buffer();
 
 // Define return error code
@@ -108,7 +105,6 @@ static const char htmlReturnHome[] PROGMEM =
   "<script>window.location=\"/\";</script>\n"
 ;
 
-#if defined(ARDUINO)
 void print_html_standard_header() {
   bfill.emit_p(PSTR("$F$F$F$F\r\n"), html200OK, htmlContentHTML, htmlNoCache, htmlAccessControl);
 }
@@ -191,118 +187,6 @@ int available_ether_buffer() {
   return ETHER_BUFFER_SIZE - (int)bfill.position();
 }
 
-#else
-void print_html_standard_header() {
-  m_client->write((const uint8_t *)html200OK, strlen(html200OK));
-  m_client->write((const uint8_t *)htmlContentHTML, strlen(htmlContentHTML));
-  m_client->write((const uint8_t *)htmlNoCache, strlen(htmlNoCache));
-  m_client->write((const uint8_t *)htmlAccessControl, strlen(htmlAccessControl));
-  m_client->write((const uint8_t *)"\r\n", 2);
-}
-
-void print_json_header(bool bracket=true) {
-  m_client->write((const uint8_t *)html200OK, strlen(html200OK));
-  m_client->write((const uint8_t *)htmlContentJSON, strlen(htmlContentJSON));
-  m_client->write((const uint8_t *)htmlNoCache, strlen(htmlNoCache));
-  m_client->write((const uint8_t *)htmlAccessControl, strlen(htmlAccessControl));
-  if(bracket) m_client->write((const uint8_t *)"\r\n{", 3);
-  else m_client->write((const uint8_t *)"\r\n", 2);
-}
-
-byte findKeyVal (const char *str,char *strbuf, uint8_t maxlen,const char *key,bool key_in_pgm=false,uint8_t *keyfound=NULL)
-{
-  uint8_t found=0;
-  uint8_t i=0;
-  const char *kp;
-  kp=key;
-  while(*str &&  *str!=' ' && *str!='\n' && found==0){
-    if (*str == *kp){
-      kp++;
-      if (*kp == '\0'){
-        str++;
-        kp=key;
-        if (*str == '='){
-            found=1;
-        }
-      }
-    } else {
-      kp=key;
-    }
-    str++;
-  }
-  if (found==1){
-    // copy the value to a buffer and terminate it with '\0'
-    while(*str &&  *str!=' ' && *str!='\n' && *str!='&' && i<maxlen-1){
-      *strbuf=*str;
-      i++;
-      str++;
-      strbuf++;
-    }
-    *strbuf='\0';
-  }
-  // return the length of the value
-  if (keyfound) *keyfound = found;
-  return(i);
-}
-
-
-void BufferFiller::emit_p(const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  for (;;) {
-    char c = *fmt++;
-    if (c == 0)
-      break;
-    if (c != '$') {
-      *ptr++ = c;
-      continue;
-    }
-    c = *fmt++;
-    switch (c) {
-    case 'D':
-      itoa(va_arg(ap, int), (char*) ptr, 10);  // ray
-      break;
-    case 'L':
-      ultoa(va_arg(ap, long), (char*) ptr, 10); // ray
-      break;
-    case 'S':
-    case 'F':
-      strcpy((char*) ptr, va_arg(ap, const char*));
-      break;
-    case 'E': {
-      byte* s = va_arg(ap, byte*);
-      char d;
-      while ((d = nvm_read_byte(s++)) != 0)
-        *ptr++ = d;
-      continue;
-    }
-    default:
-      *ptr++ = c;
-      continue;
-    }
-    ptr += strlen((char*) ptr);
-  }
-  *(ptr)=0;
-  va_end(ap);
-}
-
-void rewind_ether_buffer() {
-  bfill = ether_buffer;
-}
-
-void send_packet(bool final=false) {
-  m_client->write((const uint8_t *)ether_buffer, strlen(ether_buffer));
-  if (final)
-    m_client->stop();
-  else
-    rewind_ether_buffer();
-}
-
-int available_ether_buffer() {
-  return ETHER_BUFFER_SIZE - (int)bfill.position();
-}
-#endif
-
 /** Convert a single hex digit character to its integer value */
 unsigned char h2int(char c)
 {
@@ -367,12 +251,10 @@ void server_json_stations_main()
   server_json_stations_attrib(PSTR("masop2"), ADDR_NVM_MAS_OP_2);
   server_json_stations_attrib(PSTR("stn_dis"), ADDR_NVM_STNDISABLE);
   server_json_stations_attrib(PSTR("stn_seq"), ADDR_NVM_STNSEQ);
-#if defined(ARDUINO)  // only output stn_spe if it's supported
+#ifndef NOSD  // only output stn_spe if it's supported
   if (os.status.has_sd) {
     server_json_stations_attrib(PSTR("stn_spe"), ADDR_NVM_STNSPE);
   }
-#else
-  server_json_stations_attrib(PSTR("stn_spe"), ADDR_NVM_STNSPE);
 #endif
   bfill.emit_p(PSTR("\"snames\":["));
   byte sid;
@@ -398,10 +280,10 @@ byte server_json_stations(char *p) {
 
 /** Output station special attribute */
 byte server_json_station_special(char *p) {
-#if defined(ARDUINO)
+#ifndef NOSD
   // if no sd card, return false
   if (!os.status.has_sd)  return HTML_PAGE_NOT_FOUND;
-#endif
+
   byte sid;
   byte comma=0;
   int stepsize=sizeof(StationSpecialData);
@@ -418,6 +300,9 @@ byte server_json_station_special(char *p) {
   bfill.emit_p(PSTR("}"));
   delay(1);
   return HTML_OK;
+#else
+    return HTML_PAGE_NOT_FOUND;
+#endif
 }
 
 void server_change_stations_attrib(char *p, char header, int addr)
@@ -467,12 +352,11 @@ byte server_change_stations(char *p)
   server_change_stations_attrib(p, 'n', ADDR_NVM_MAS_OP_2); // master2
   server_change_stations_attrib(p, 'd', ADDR_NVM_STNDISABLE); // disable
   server_change_stations_attrib(p, 'q', ADDR_NVM_STNSEQ); // sequential
-#if defined(ARDUINO)  // only parse station special bits if it's supported
+// only parse station special bits if it's supported
+#ifndef NOSD
   if(os.status.has_sd) {
     server_change_stations_attrib(p, 'p', ADDR_NVM_STNSPE); // special
   }
-#else
-  server_change_stations_attrib(p, 'p', ADDR_NVM_STNSPE); // special
 #endif
   /* handle special data */
   if(findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sid"), true)) {
@@ -483,27 +367,6 @@ byte server_change_stations(char *p)
       int stepsize=sizeof(StationSpecialData);
       tmp_buffer[0]-='0';
       tmp_buffer[stepsize-1] = 0;
-
-#if !defined(ARDUINO) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-      // only process GPIO and HTTP stations for OS 2.3 and OSPi
-	    if(tmp_buffer[0] == STN_TYPE_GPIO) {
-        // check that pin does not clash with OSPi pins
-		    byte gpio = (tmp_buffer[1] - '0') * 10 + tmp_buffer[2] - '0';
-		    byte activeState = tmp_buffer[3] - '0';
-
-		    byte gpioList[] = PIN_FREE_LIST;
-		    bool found = false;
-		    for (int i = 0; i < sizeof(gpioList) && found == false; i++) {
-			    if (gpioList[i] == gpio) found = true;
-		    }
-		    if (!found || activeState > 1) return HTML_DATA_OUTOFBOUND;
-	    } else if (tmp_buffer[0] == STN_TYPE_HTTP) {
-		    urlDecode(tmp_buffer + 1); // Unwind any url encoding of special data
-		    if (strlen(tmp_buffer+1) > sizeof(HTTPStationData)) {
-			    return HTML_DATA_OUTOFBOUND;
-		    }
-	    }
-#endif
 
       write_to_file(stns_filename, tmp_buffer, strlen(tmp_buffer)+1, stepsize*sid, false);
 
@@ -752,36 +615,20 @@ byte server_change_program(char *p) {
 void server_json_options_main() {
   byte oid;
   for(oid=0;oid<NUM_OPTIONS;oid++) {
-    #if !defined(ARDUINO) // do not send the following parameters for non-Arduino platforms
-    if (oid==OPTION_USE_NTP     || oid==OPTION_USE_DHCP    ||
-        oid==OPTION_STATIC_IP1  || oid==OPTION_STATIC_IP2  || oid==OPTION_STATIC_IP3  || oid==OPTION_STATIC_IP4  ||
-        oid==OPTION_GATEWAY_IP1 || oid==OPTION_GATEWAY_IP2 || oid==OPTION_GATEWAY_IP3 || oid==OPTION_GATEWAY_IP4)
-        continue;
-    #endif
     int32_t v=os.options[oid];
     if (oid==OPTION_MASTER_OFF_ADJ || oid==OPTION_MASTER_OFF_ADJ_2 ||
         oid==OPTION_MASTER_ON_ADJ  || oid==OPTION_MASTER_ON_ADJ_2 ||
         oid==OPTION_STATION_DELAY_TIME) {
       v=water_time_decode_signed(v);
     }
-    #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-    if (oid==OPTION_BOOST_TIME) {
-      if (os.hw_type==HW_TYPE_AC) continue;
-      else v<<=2;
-    }
-    #else
+
     if (oid==OPTION_BOOST_TIME) continue;
-    #endif
 
     if (oid==OPTION_SEQUENTIAL_RETIRED) continue;
     if (oid==OPTION_DEVICE_ID && os.status.has_hwmac) continue; // do not send DEVICE ID if hardware MAC exists
-   
-#if defined(ARDUINO) 
-    if (os.lcd.type() == LCD_I2C) {
-      // for I2C type LCD, we can't adjust contrast or backlight
-      if(oid==OPTION_LCD_CONTRAST || oid==OPTION_LCD_BACKLIGHT) continue;
-    }
-#endif
+
+	if (oid == OPTION_LCD_CONTRAST || oid == OPTION_LCD_BACKLIGHT)
+	    continue;
 
     // each json name takes 5 characters
     strncpy_P0(tmp_buffer, op_json_names+oid*5, 5);
@@ -858,7 +705,10 @@ byte server_view_scripturl(char *p) {
   return HTML_OK;
 }
 
+#ifndef NOFLOWSENSOR
 extern ulong flow_count;
+#endif
+
 void server_json_controller_main() {
   byte bid, sid;
   ulong curr_time = os.now_tz();
@@ -884,11 +734,6 @@ void server_json_controller_main() {
               pd.lastrun.duration,
               pd.lastrun.endtime);
 
-#if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-  if(os.status.has_curr_sense) {
-    bfill.emit_p(PSTR("\"curr\":$D,"), os.read_current());
-  }
-#endif
   if(os.options[OPTION_SENSOR_TYPE]==SENSOR_TYPE_FLOW) {
     bfill.emit_p(PSTR("\"flcrt\":$L,\"flwrt\":$D,"), os.flowcount_rt, FLOWCOUNT_RT_WINDOW);
   }
@@ -920,12 +765,6 @@ void server_json_controller_main() {
   if(read_from_file(wtopts_filename, tmp_buffer)) {
     bfill.emit_p(PSTR(",\"wto\":{$S}"), tmp_buffer);
   }
-  
-#if !defined(ARDUINO) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-  if(read_from_file(ifkey_filename, tmp_buffer)) {
-    bfill.emit_p(PSTR(",\"ifkey\":\"$S\""), tmp_buffer);
-  }
-#endif
 
   bfill.emit_p(PSTR("}"));
   delay(1);
@@ -970,14 +809,8 @@ byte server_change_values(char *p)
     reset_all_stations();
   }
 
-#ifndef ARDUINO
-    if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("update"), true) && atoi(tmp_buffer) > 0) {
-        //bfill.emit_p(PSTR("Updating..."));
-        os.update_dev();
-    }
-#endif
-
 #define TIME_REBOOT_DELAY  20
+
   if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("rbt"), true) && atoi(tmp_buffer) > 0) {
     print_html_standard_header();
     //bfill.emit_p(PSTR("Rebooting..."));
@@ -1033,9 +866,7 @@ void string_remove_space(char *src) {
  */
 byte server_change_scripturl(char *p)
 {
-#if defined(DEMO)
-  return HTML_REDIRECT_HOME;
-#endif
+
   if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("jsp"), true)) {
     urlDecode(tmp_buffer);
     tmp_buffer[MAX_JAVASCRIPTURL]=0;  // make sure we don't exceed the maximum size
@@ -1099,11 +930,7 @@ byte server_change_options(char *p)
 		        oid==OPTION_STATION_DELAY_TIME) {
 		      v=water_time_encode_signed(v);
 		    } // encode station delay time
-        #if defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284__)
-        if(os.hw_type==HW_TYPE_DC && oid==OPTION_BOOST_TIME) {
-           v>>=2;
-        }
-        #endif
+
         if (v>=0 && v<=max_value) {
           os.options[oid] = v;
 		    } else {
@@ -1148,7 +975,7 @@ byte server_change_options(char *p)
   } else if (keyfound) {
     tmp_buffer[0]=0;
     write_to_file(ifkey_filename, tmp_buffer, strlen(tmp_buffer));
-  }  
+  }
   // if not using NTP and manually setting time
   if (!os.options[OPTION_USE_NTP] && findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("ttt"), true)) {
     unsigned long t;
@@ -1202,9 +1029,6 @@ byte server_change_password(char *p)
   if (findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("npw"), true)) {
     char tbuf2[TMP_BUFFER_SIZE];
     if (findKeyVal(p, tbuf2, TMP_BUFFER_SIZE, PSTR("cpw"), true) && strncmp(tmp_buffer, tbuf2, MAX_USER_PASSWORD) == 0) {
-      #if defined(DEMO)
-        return HTML_SUCCESS;
-      #endif
       urlDecode(tmp_buffer);
       tmp_buffer[MAX_USER_PASSWORD-1]=0;  // make sure we don't exceed the maximum size
       nvm_write_block(tmp_buffer, (void*)ADDR_NVM_PASSWORD, strlen(tmp_buffer)+1);
@@ -1319,10 +1143,10 @@ byte server_change_manual(char *p) {
  */
 byte server_json_log(char *p) {
 
-#if defined(ARDUINO)
+#ifndef NOSD
+
   // if no sd card, return false
   if (!os.status.has_sd)  return HTML_PAGE_NOT_FOUND;
-#endif
 
   unsigned int start, end;
 
@@ -1422,6 +1246,9 @@ byte server_json_log(char *p) {
   bfill.emit_p(PSTR("]"));
   delay(1);
   return HTML_OK;
+#else
+    return HTML_PAGE_NOT_FOUND;
+#endif
 }
 /**
  * Delete log
@@ -1507,7 +1334,7 @@ URLHandler urls[] = {
   server_delete_program,  // dp
   server_change_program,  // cp
   server_change_runonce,  // cr
-  server_manual_program,  // mp  
+  server_manual_program,  // mp
   server_moveup_program,  // up
   server_json_programs,   // jp
   server_change_options,  // co
@@ -1597,7 +1424,6 @@ void handle_web_request(char *p)
 }
 
 
-#if defined(ARDUINO)
 /** NTP sync request */
 unsigned long getNtpTime()
 {
@@ -1628,4 +1454,3 @@ unsigned long getNtpTime()
   } while(tick<20);
   return 0;
 }
-#endif
