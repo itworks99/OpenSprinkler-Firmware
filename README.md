@@ -31,10 +31,10 @@ Support of the rain sensor could be reenabled through define.h. The other featur
  
  were removed/disabled due to the Uno storage/memory constraints. The code is shrinked to 31200 bytes (95% of Uno memory). To achieve this, it was compiled with the following options:
  
- -mcall-prologues
- -fno-inline-small-functions
- -funsigned-char
- -fshort-enums
+ - mcall-prologues
+ - fno-inline-small-functions
+ - funsigned-char
+ - fshort-enums
  
  Please refer to the following link for the detailed description of each option:
  
