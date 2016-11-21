@@ -29,17 +29,18 @@ Support of the rain sensor could be reenabled through define.h. The other featur
  - Logging and support of SD card
  - RF station support
  
- were removed/disabled due to the Uno storage/memory constraints. The code is shrinked to 31200 bytes (95% of Uno memory). To achieve this, it was compiled with the following options:
+ were removed/disabled due to the Uno storage/memory constraints.
+ The code is shrinked to 31200 bytes (95% of Uno memory). To achieve this, it was compiled with the following options:
  
  - mcall-prologues
  - fno-inline-small-functions
  - funsigned-char
  - fshort-enums
  
- Please refer to the following link for the detailed description of each option:
+Please refer to the following link for the detailed description of each option:
  
  https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
  https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
  
- I beleive that support of the flow sensor could be reenabled in the future with the further optimization of the source code.
+I beleive that support of the flow sensor could be reenabled in the future with the further optimization of the source code.
   
