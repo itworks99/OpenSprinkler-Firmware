@@ -25,10 +25,10 @@
 #define _DEFINES_H
 
 #define OSMICRO			// OpenSprinklerMicro main define to disable parts of existing code
-#define NORF			// Disable support of RF stations to fit code into Uno memory
+#define NORF			// Disable support of all special stations (RF, remote etc.) to fit code into Uno memory
 #define NOSD			// Disable support of logging functions to fit code into Uno memory
 #define NOSHIFT			// Use pins instead of shift register
-#define NORAINSENSOR		// Disable rainsensor
+//#define NORAINSENSOR		// Disable rainsensor
 #define NOFLOWSENSOR		// Disable flowsensor to fit code into Uno memory
 
 //#define SERIAL_DEBUG		// Enable debug output via serial
@@ -115,7 +115,7 @@
 /** Default password, location string, weather key, script urls */
 #define DEFAULT_PASSWORD          "a6d82bced638de3def1e9bbb4983225c"  // md5 of 'opendoor'
 #define DEFAULT_LOCATION  	  "Sydney,Australia"
-#define DEFAULT_WEATHER_KEY       "bfd2bcb7da05a235"
+#define DEFAULT_WEATHER_KEY       ""
 #define DEFAULT_JAVASCRIPT_URL    "https://ui.opensprinkler.com/js"
 #define DEFAULT_WEATHER_URL       "weather.opensprinkler.com"
 
@@ -204,6 +204,7 @@ typedef enum {
 #define PIN_STATIONS_LIST 0,1,2,3,4,5,6,7 // Controlling stations directly from those pins - should match MAX_NUM_STATIONS
 #endif
 
+#define PIN_HEARTBEAT      9	 // Heartbeat LED to blink every second
 #define PIN_RTC_VCC	   A3
 #define PIN_RTC_GND	   A2
 #define PIN_ETHER_CS       10    // Ethernet controller chip select pin
@@ -213,12 +214,12 @@ typedef enum {
 #endif
 
 #ifndef NORAINSENSOR
-  #define PIN_RAINSENSOR    11    // rain sensor is connected to pin D3
-  #define PIN_FLOWSENSOR    11    // flow sensor (currently shared with rain sensor, change if using a different pin)
+#define PIN_RAINSENSOR    A1    // rain sensor is connected to pin D3
+#define PIN_FLOWSENSOR    A2    // flow sensor (currently shared with rain sensor, change if using a different pin)
 #endif
 
 #ifndef NOFLOWSENSOR
-#define PIN_FLOWSENSOR_INT 1    // flow sensor interrupt pin (INT1)
+#define PIN_FLOWSENSOR_INT 8    // flow sensor interrupt pin (INT1)
 #endif
 
   // Ethernet buffer size

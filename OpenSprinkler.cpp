@@ -48,15 +48,12 @@ char tmp_buffer[TMP_BUFFER_SIZE+1];       // scratch buffer
 #ifndef NOSD
   const char wtopts_filename[] PROGMEM = WEATHER_OPTS_FILENAME;
   const char stns_filename[]   PROGMEM = STATION_ATTR_FILENAME;
+#include "SdFat.h"
+extern SdFat sd;
 #endif
 
 #ifndef OSMICRO
   const char ifkey_filename[]  PROGMEM = IFTTT_KEY_FILENAME;
-#endif
-
-#ifndef NOSD
-#include "SdFat.h"
-  extern SdFat sd;
 #endif
 
 #ifdef NOSHIFT
@@ -465,39 +462,9 @@ void OpenSprinkler::rainsensor_status() {
 /** Read the number of 8-station expansion boards */
 // AVR has capability to detect number of expansion boards
 int OpenSprinkler::detect_exp() {
-#ifndef OSMICRO
-  unsigned int v = analogRead(PIN_EXP_SENSE);
-  // OpenSprinkler uses voltage divider to detect expansion boards
-  // Master controller has a 1.6K pull-up;
-  // each expansion board (8 stations) has 10K pull-down connected in parallel;
-  // so the exact ADC value for n expansion boards is:
-  //    ADC = 1024 * 10 / (10 + 1.6 * n)
-  // For  0,   1,   2,   3,   4,   5,  6 expansion boards, the ADC values are:
-  //   1024, 882, 775, 691, 624, 568, 522
-  // Actual threshold is taken as the midpoint between, to account for errors
-  int n = -1;
-  if (v > 953) { // 0
-    n = 0;
-  } else if (v > 828) { // 1
-    n = 1;
-  } else if (v > 733) { // 2
-    n = 2;
-  } else if (v > 657) { // 3
-    n = 3;
-  } else if (v > 596) { // 4
-    n = 4;
-  } else if (v > 545) { // 5
-    n = 5;
-  } else if (v > 502) { // 6
-    n = 6;
-  } else {  // cannot determine
-  }
-  return n;
-#else
   return -1;
-#endif
 }
-
+#ifndef NORF
 /** Convert hex code to ulong integer */
 static ulong hex2ulong(byte *code, byte len) {
   char c;
@@ -517,7 +484,7 @@ static ulong hex2ulong(byte *code, byte len) {
   }
   return v;
 }
-#ifndef NORF
+
 /** Parse RF code into on/off/timeing sections */
 uint16_t OpenSprinkler::parse_rfstation_code(RFStationData *data, ulong* on, ulong *off) {
 
@@ -711,6 +678,7 @@ void httpget_callback(byte status, uint16_t off, uint16_t len) {
  * password as the main controller
  */
 void OpenSprinkler::switch_remotestation(RemoteStationData *data, bool turnon) {
+#ifndef NORF
   // construct string
   ulong ip = hex2ulong(data->ip, sizeof(data->ip));
   ether.hisip[0] = ip>>24;
@@ -732,6 +700,7 @@ void OpenSprinkler::switch_remotestation(RemoteStationData *data, bool turnon) {
   ether.browseUrl(PSTR("/cm"), p, PSTR("*"), httpget_callback);
   for(int l=0;l<100;l++)  ether.packetLoop(ether.packetReceive());
   ether.hisport = _port;
+#endif
 }
 
 /** Setup function for options */

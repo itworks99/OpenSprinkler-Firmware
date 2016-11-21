@@ -6,3 +6,5 @@ stns.dat
 /core/
 /Release/
 /.ino.cpp
+/.cproject
+/.project

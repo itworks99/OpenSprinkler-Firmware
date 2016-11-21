@@ -59,7 +59,6 @@ void httpget_callback(byte, uint16_t, uint16_t);
 #define CHECK_NETWORK_INTERVAL  601     // Network checking timeout, 10 minutes
 #define CHECK_WEATHER_TIMEOUT   3601    // Weather check interval: 1 hour
 #define CHECK_WEATHER_SUCCESS_TIMEOUT 86433L // Weather check success interval: 24 hrs
-#define LCD_BACKLIGHT_TIMEOUT   15      // LCD backlight timeout: 15 secs
 #define PING_TIMEOUT            200     // Ping test timeout: 200 ms
 
 extern char tmp_buffer[];       // scratch buffer
@@ -68,6 +67,8 @@ BufferFiller bfill;             // buffer filler
 // ====== Object defines ======
 OpenSprinkler os; // OpenSprinkler object
 ProgramData pd;   // ProgramdData object
+
+bool heartbeat = false;
 
 #ifndef NOFLOWSENSOR
 /* ====== Robert Hillman (RAH)'s implementation of flow sensor ======
@@ -117,6 +118,10 @@ void do_setup() {
   os.begin();          // OpenSprinkler init
   os.options_setup();  // Setup options
   pd.init();            // ProgramData init
+
+    //enabling heartbeat LED
+    pinMode(PIN_HEARTBEAT, OUTPUT);
+    digitalWrite(PIN_HEARTBEAT, HIGH);
 
     //enabling RTC
     pinMode(PIN_RTC_GND, OUTPUT);    // DS1307 GND connected to A2
@@ -211,6 +216,14 @@ void do_loop()
   // if 1 second has passed
   if (last_time != curr_time) {
     last_time = curr_time;
+
+	// CHange state of heartbeat led
+
+	if (!heartbeat)
+	    heartbeat = true;
+	else
+	    heartbeat = false;
+	digitalWrite(PIN_HEARTBEAT, heartbeat);
 
     // ====== Check raindelay status ======
     if (os.status.rain_delayed) {
