@@ -76,7 +76,6 @@ void ProgramData::dequeue(byte qid) {
       station_qid[queue[qid].sid] = qid;
   }
   nqueue--;
-#ifdef SERIAL_DEBUG
     RuntimeQueueStruct *q = queue;
 
   DEBUG_PRINT("de:");
@@ -90,7 +89,7 @@ void ProgramData::dequeue(byte qid) {
     DEBUG_PRINT("]");
   }
   DEBUG_PRINTLN("");
-#endif
+
 }
 
 /** Load program count from NVM */

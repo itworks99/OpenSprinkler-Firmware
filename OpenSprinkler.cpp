@@ -45,16 +45,14 @@ byte OpenSprinkler::weather_update_flag;
 
 char tmp_buffer[TMP_BUFFER_SIZE+1];       // scratch buffer
 
-#ifndef NOSD
   const char wtopts_filename[] PROGMEM = WEATHER_OPTS_FILENAME;
   const char stns_filename[]   PROGMEM = STATION_ATTR_FILENAME;
+#ifndef NOSD
 #include "SdFat.h"
 extern SdFat sd;
 #endif
 
-#ifndef OSMICRO
-  const char ifkey_filename[]  PROGMEM = IFTTT_KEY_FILENAME;
-#endif
+//const char ifkey_filename[] PROGMEM = IFTTT_KEY_FILENAME;
 
 #ifdef NOSHIFT
 // station pins setup
@@ -180,7 +178,7 @@ const char op_max[] PROGMEM = {
 /** Option values (stored in RAM) */
 byte OpenSprinkler::options[] = {
   OS_FW_VERSION, // firmware version
-  28, // default time zone: GMT-5
+    28, // default time zone: GMT-5
   1,  // 0: disable NTP sync, 1: enable NTP sync
   1,  // 0: use static ip, 1: use dhcp
   0,  // this and next 3 bytes define static ip
@@ -206,9 +204,9 @@ byte OpenSprinkler::options[] = {
   1,  // device enable
   0,  // 1: ignore password; 0: use password
   0,  // device id
-  150,// lcd contrast
-  100,// lcd backlight
-  50, // lcd dimming
+    0,  // lcd contrast
+    0,  // lcd backlight
+    0, // lcd dimming
   80, // boost time (only valid to DC and LATCH type)
   0,  // weather algorithm (0 means not using weather algorithm)
   50, // this and the next three bytes define the ntp server ip

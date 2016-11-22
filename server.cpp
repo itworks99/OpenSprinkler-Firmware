@@ -476,7 +476,6 @@ byte server_change_runonce(char *p) {
     schedule_all_stations(os.now_tz());
     return HTML_SUCCESS;
   }
-
   return HTML_DATA_MISSING;
 }
 

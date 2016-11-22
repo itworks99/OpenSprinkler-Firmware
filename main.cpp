@@ -340,20 +340,19 @@ void do_loop()
       // calculate start and end time
       if (match_found) {
         schedule_all_stations(curr_time);
-#ifdef SERIAL_DEBUG
-//        // For debugging: print out queued elements
-//        DEBUG_PRINT("en:");
-//        for(q=pd.queue;q<pd.queue+pd.nqueue;q++) {
-//          DEBUG_PRINT("[");
-//          DEBUG_PRINT(q->sid);
-//          DEBUG_PRINT(",");
-//          DEBUG_PRINT(q->dur);
-//          DEBUG_PRINT(",");
-//          DEBUG_PRINT(q->st);
-//          DEBUG_PRINT("]");
-//        }
-//        DEBUG_PRINTLN("");
-#endif
+		// For debugging: print out queued elements
+		DEBUG_PRINT("en:");
+		for (q = pd.queue; q < pd.queue + pd.nqueue; q++)
+		    {
+		    DEBUG_PRINT("[");
+		    DEBUG_PRINT(q->sid);
+		    DEBUG_PRINT(",");
+		    DEBUG_PRINT(q->dur);
+		    DEBUG_PRINT(",");
+		    DEBUG_PRINT(q->st);
+		    DEBUG_PRINT("]");
+		    }
+		DEBUG_PRINTLN("");
       }
     }//if_check_current_minute
 

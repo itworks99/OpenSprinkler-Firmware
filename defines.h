@@ -46,12 +46,9 @@
 #define OS_HW_VERSION_BASE   0x00
 #define HW_TYPE_UNIV         0x15   // DC powered, universal driver
 
-#ifndef NOSD
 /** File names */
 #define WEATHER_OPTS_FILENAME "wtopts.txt"    // weather options file
 #define STATION_ATTR_FILENAME "stns.dat"      // station attributes data file
-#endif
-
 #define STATION_SPECIAL_DATA_SIZE  (TMP_BUFFER_SIZE - 8)
 
 #define FLOWCOUNT_RT_WINDOW   30    // flow count window (for computing real-time flow rate), 30 seconds
@@ -63,6 +60,13 @@
 #define STN_TYPE_GPIO        0x03	// Support for raw connection of station to GPIO pin
 #define STN_TYPE_HTTP        0x04	// Support for HTTP Get connection
 #define STN_TYPE_OTHER       0xFF
+
+#define IFTTT_PROGRAM_SCHED   0x01
+#define IFTTT_RAINSENSOR      0x02
+#define IFTTT_FLOWSENSOR      0x04
+#define IFTTT_WEATHER_UPDATE  0x08
+#define IFTTT_REBOOT          0x10
+#define IFTTT_STATION_RUN     0x20
 
 /** Sensor type macro defines */
 #define SENSOR_TYPE_NONE    0x00
@@ -76,18 +80,18 @@
 /** 1KB NVM (ATmega328) data structure:
  * |         |     |  ---STRING PARAMETERS---      |           |   ----STATION ATTRIBUTES-----      |          |
  * | PROGRAM | CON | PWD | LOC | JURL | WURL | KEY | STN_NAMES | MAS | IGR | MAS2 | DIS | SEQ | SPE | OPTIONS  |
- * |  (493)  |(12) |(36) |(48) | (40) | (40) |(24) |   (128)   | (1) | (1) |  (1) | (1) | (1) | (1) |  (58)    |
+ * |  (664)  |(12) |(36) |(48) | (40) | (40) |(24) |   (96)    | (1) | (1) |  (1) | (1) | (1) | (1) |  (58)    |
  * |         |     |     |     |      |      |     |           |     |     |      |     |     |     |          |
- * 0        493   505   541   589    629    669   693        821    822   823    824   825   826   827        885
+ * 0        664   676   712   760    800    840   864         960   961   962    963   964   965   966        1024
  */
 
 #define MAX_EXT_BOARDS    0  // maximum number of exp. boards (each expands 8 stations)
 #define MAX_NUM_STATIONS  ((1+MAX_EXT_BOARDS)*8)  // maximum number of stations
 
 #define NVM_SIZE            1024  // For AVR, nvm data is stored in EEPROM, ATmega328 has 1K EEPROM
-#define STATION_NAME_SIZE   16    // maximum number of characters in each station name
+#define STATION_NAME_SIZE   12    // maximum number of characters in each station name
 
-#define MAX_PROGRAMDATA     493   // program data
+#define MAX_PROGRAMDATA     664   // program data
 #define MAX_NVCONDATA       12     // non-volatile controller data
 #define MAX_USER_PASSWORD   36    // user password
 #define MAX_LOCATION        48    // location string
@@ -118,6 +122,7 @@
 #define DEFAULT_WEATHER_KEY       ""
 #define DEFAULT_JAVASCRIPT_URL    "https://ui.opensprinkler.com/js"
 #define DEFAULT_WEATHER_URL       "weather.opensprinkler.com"
+#define DEFAULT_IFTTT_URL         "maker.ifttt.com"
 
 /** Macro define of each option
   * Refer to OpenSprinkler.cpp for details on each option

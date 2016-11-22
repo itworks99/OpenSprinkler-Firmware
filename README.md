@@ -7,7 +7,9 @@ OpenSprinklerMicro is a minimalistic version of the OpenSprinkler irrigation con
  - Arduino Uno R3
  - DS1307 real-time clock shield
  - ENC28J60 Ethernet module
- - Relay board and (optionally) a shift register
+ - Relay board of your choice and (optionally) a shift register
+ 
+![alt tag](OpenSprinklerMicro_bb.png)
  
 The support of shift register could be reenabled through defines.h while the current code is written to support relay board connected directly to the pins 0-7.
 
