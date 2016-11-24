@@ -726,7 +726,7 @@ void schedule_all_stations(ulong curr_time) {
       // stagger concurrent stations by 1 second
       con_start_time++;
     }
-#ifdef SERIAL_DEBUG
+
     DEBUG_PRINT("[");
     DEBUG_PRINT(sid);
     DEBUG_PRINT(":");
@@ -735,7 +735,7 @@ void schedule_all_stations(ulong curr_time) {
     DEBUG_PRINT(q->dur);
     DEBUG_PRINT("]");
     DEBUG_PRINTLN(pd.nqueue);
-#endif
+
     if (!os.status.program_busy) {
       os.status.program_busy = 1;  // set program busy bit
       // start flow count

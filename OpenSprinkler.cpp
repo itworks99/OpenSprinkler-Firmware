@@ -335,11 +335,13 @@ void OpenSprinkler::begin() {
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA,  OUTPUT);
 #else
+
     for (byte i = 0; i < MAX_NUM_STATIONS; i++)
 	{
 	pinMode(stationPins[i], OUTPUT);
 	digitalWrite(stationPins[i], LOW);
 	}
+
 #endif
 	// Reset all stations
   clear_all_station_bits();
@@ -422,11 +424,12 @@ void OpenSprinkler::apply_all_station_bits() {
       digitalWrite(PIN_SR_CLOCK, HIGH);
     }
 #else
-	for (byte i = 0; i < MAX_NUM_STATIONS; i++)
+	for (s = 0; s < MAX_NUM_STATIONS; s++)
 	    {
 	    digitalWrite(
-			 stationPins[i],
-			 (sbits & ((byte) 1 << (7 - i))) ? HIGH : LOW); // Stations are connected to digital pins as defined by PIN_STATIONS_LIST
+			 stationPins[s],
+			 (sbits & ((byte) 1 << (7 - s))) ? HIGH : LOW); // Stations are connected to digital pins as defined by PIN_STATIONS_LIST
+	    delay(10); //Little delay to let relay switch completely (5 to 10ms is required)
 	    }
 #endif
 	}
@@ -578,6 +581,7 @@ void OpenSprinkler::switch_special_station(byte sid, byte value) {
       // request remote station
       switch_remotestation((RemoteStationData *)stn->data, value);
     }
+
   }
 }
 
@@ -699,7 +703,7 @@ void OpenSprinkler::switch_remotestation(RemoteStationData *data, bool turnon) {
   for(int l=0;l<100;l++)  ether.packetLoop(ether.packetReceive());
   ether.hisport = _port;
 #endif
-}
+    }
 
 /** Setup function for options */
 void OpenSprinkler::options_setup() {

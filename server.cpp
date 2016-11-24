@@ -362,6 +362,8 @@ byte server_change_stations(char *p)
   if(findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sid"), true)) {
     sid = atoi(tmp_buffer);
     if(sid<0 || sid>os.nstations) return HTML_DATA_OUTOFBOUND;
+
+
     if(findKeyVal(p, tmp_buffer, TMP_BUFFER_SIZE, PSTR("st"), true) &&
        findKeyVal(p, tmp_buffer+1, TMP_BUFFER_SIZE-1, PSTR("sd"), true)) {
       int stepsize=sizeof(StationSpecialData);
@@ -375,6 +377,7 @@ byte server_change_stations(char *p)
       return HTML_DATA_MISSING;
 
     }
+
   }
   return HTML_SUCCESS;
 }
