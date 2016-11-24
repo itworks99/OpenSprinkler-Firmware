@@ -2,10 +2,10 @@
 
 OpenSprinklerMicro is a minimalistic version of the OpenSprinkler irrigation controller that can run on standart Arduino Uno hardware and shields. The following features were removed/disabled due to the Uno storage/memory constraints:
 
- - Support for LCD and buttons
- - Logging and support of SD card
- - Support for RF and remote stations
- - Flow sensor support
+- Support for LCD and buttons
+- Logging and support of SD card
+- Support for RF and remote stations
+- Flow sensor support
  
  The code now also supports relay board/relays connected directly to the pins 0-7 without shift register. The contrloller connects to the network as DHCP client using software MAC address **00:69:69:2d:31:00** and hostname **OS-AA**.
  
@@ -13,11 +13,11 @@ OpenSprinklerMicro is a minimalistic version of the OpenSprinkler irrigation con
 
 The following hardware shields are required:
 
- - Arduino Uno R3
- - DS1307 real-time clock shield
- - ENC28J60 Ethernet module
- - Relay board of your choice
- - (optionally) a shift register
+- Arduino Uno R3
+- DS1307 real-time clock shield
+- ENC28J60 Ethernet module
+- Relay board of your choice
+- (optionally) a shift register
  
 ![alt tag](OpenSprinklerMicro_bb.png)
 
@@ -36,17 +36,17 @@ so the code now uses WsWire instead of standart Wire library. DS1307 is connecte
 
  The code is shrinked to 30800 bytes (94% of Uno memory). To achieve this, it was compiled with the following options:
  
- ####GCC:
+####GCC:
  
- - fno-inline-small-functions
- - funsigned-char
- - fshort-enums
+- fno-inline-small-functions
+- funsigned-char
+- fshort-enums
  
   https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
  
- ####AVR-specific:
+####AVR-specific:
  
- - mcall-prologues
+- mcall-prologues
  
   https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
  
