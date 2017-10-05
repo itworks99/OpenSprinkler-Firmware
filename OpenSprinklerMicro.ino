@@ -20,7 +20,6 @@
  * along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-
 #include "OpenSprinkler.h"
 
 extern OpenSprinkler os;
@@ -31,9 +30,9 @@ void do_loop();
 void setup()
     {
     do_setup();
-}
+    }
 
 void loop()
     {
     do_loop();
-}
+    }

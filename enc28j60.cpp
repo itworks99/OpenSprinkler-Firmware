@@ -8,6 +8,8 @@
 //
 // 2010-05-20 <jc@wippler.nl>
 
+#ifndef ESP8266
+
 #if ARDUINO >= 100
 #include <Arduino.h> // Arduino 1.0
 #else
@@ -377,13 +379,12 @@ byte ENC28J60::initialize (uint16_t size, const byte* macaddr, byte csPin) {
 
     writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
     delay(2); // errata B7/2
-
+    
     unsigned long st = millis();
     while (!readOp(ENC28J60_READ_CTRL_REG, ESTAT) & ESTAT_CLKRDY) {
-	if (millis() > st + 30000L)
-	    return 0;  // 30 seconds timeout
+      if (millis() > st+30000L) return 0;  // 30 seconds timeout
     }
-
+    
     gNextPacketPtr = RXSTART_INIT;
     writeReg(ERXST, RXSTART_INIT);
     writeReg(ERXRDPT, RXSTART_INIT);
@@ -629,3 +630,4 @@ uint8_t ENC28J60::doBIST ( byte csPin) {
     return macResult == bitsResult;
 }
 
+#endif

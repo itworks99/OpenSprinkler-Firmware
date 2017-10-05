@@ -16,8 +16,10 @@
 //   SCK - Pin 13
 //   SO  - Pin 12
 //   SI  - Pin 11
-//   CS  - Pin  10 KV: Changed from default 8
+//   CS  - Pin  8
 //
+#ifndef ESP8266
+
 #ifndef __PROG_TYPES_COMPAT__
 #define __PROG_TYPES_COMPAT__
 #endif
@@ -211,7 +213,7 @@ public:
     *     @return <i>uint8_t</i> Firmware version or zero on failure.
     */
     static uint8_t begin (const uint16_t size, const uint8_t* macaddr,
-			 uint8_t csPin = 10);
+                          uint8_t csPin =8);
 
     /**   @brief  Configure network interface with static IP
     *     @param  my_ip IP address (4 bytes). 0 for no change.
@@ -558,5 +560,7 @@ public:
 };
 
 extern EtherCard ether; //!< Global presentation of EtherCard class
+
+#endif
 
 #endif
