@@ -1,9 +1,9 @@
-##OpenSprinklerMicro
+--
+OpenSprinklerMicro
+--
 
----
 05/10/2017 Update:
 The firmware is now updated to the latest version from main repository
----
 
 OpenSprinklerMicro is a minimalistic irrigation controller running on standart Arduino Uno hardware and shields that is controlled through web interface.
 
@@ -11,7 +11,7 @@ The solenoid valves being controlled through relay board of your choice connecte
  
 The contrloller connects to the network as DHCP client using software MAC address **00:69:69:2d:31:00** and hostname **OS-AA**.
  
-###Hardware:
+Hardware:
 
 The following hardware shields are required:
 
@@ -24,11 +24,11 @@ The following hardware shields are required:
 
 You would also need Wire library as it is not included into the firmware source.
 
-###Software:
+Software:
 
  The code is shrinked to 30910 bytes (94% of Uno memory). To achieve this, it was compiled with the following options:
  
-####GCC:
+GCC:
  
 - fno-inline-small-functions
 - funsigned-char
@@ -36,7 +36,7 @@ You would also need Wire library as it is not included into the firmware source.
  
   https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
  
-####AVR-specific:
+AVR-specific:
  
 - mcall-prologues
  
